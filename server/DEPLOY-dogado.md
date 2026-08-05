@@ -1,7 +1,10 @@
 # Deployment bei dogado
 
 Diese Anleitung bringt die Seite samt Mitgliederbereich auf einen dogado-Server.
-Domain in allen Beispielen: `kungfu-spirit.de` — bitte überall ersetzen.
+Domain in allen Beispielen: `chogarkungfu.com`.
+
+Die E-Mail-Adressen bleiben bewusst auf `kungfu-spirit.de` — Website-Domain und
+Postfach-Domain sind hier verschieden.
 
 ## Kurzfazit: welches Produkt
 
@@ -64,7 +67,7 @@ Vom eigenen Rechner aus, aus dem Projektordner heraus. `node_modules`, die
 Datenbank und `.env` gehören **nicht** mit hoch:
 
 ```bash
-rsync -avz --delete --exclude node_modules --exclude server/data --exclude server/.env ./ root@kungfu-spirit.de:/opt/chogar/site/
+rsync -avz --delete --exclude node_modules --exclude server/data --exclude server/.env ./ root@chogarkungfu.com:/opt/chogar/site/
 ```
 
 Ohne rsync geht auch SFTP (FileZilla, WinSCP) auf denselben Zielpfad. Danach:
@@ -87,7 +90,7 @@ cd /opt/chogar/site/server && sudo -u chogar npm install --omit=dev
 PORT=3000
 NODE_ENV=production
 TRUST_PROXY_HOPS=1
-SITE_URL=https://kungfu-spirit.de
+SITE_URL=https://chogarkungfu.com
 
 SMTP_HOST=
 SMTP_PORT=587
@@ -171,7 +174,7 @@ apt-get install -y nginx
 server {
     listen 80;
     listen [::]:80;
-    server_name kungfu-spirit.de www.kungfu-spirit.de;
+    server_name chogarkungfu.com www.chogarkungfu.com;
 
     location / {
         proxy_pass http://127.0.0.1:3000;
@@ -196,7 +199,7 @@ ln -s /etc/nginx/sites-available/chogar /etc/nginx/sites-enabled/ && rm -f /etc/
 ### 9. HTTPS mit Let's Encrypt
 
 ```bash
-apt-get install -y certbot python3-certbot-nginx && certbot --nginx -d kungfu-spirit.de -d www.kungfu-spirit.de
+apt-get install -y certbot python3-certbot-nginx && certbot --nginx -d chogarkungfu.com -d www.chogarkungfu.com
 ```
 
 Certbot trägt die TLS-Konfiguration selbst in den nginx-Block ein und erneuert
@@ -236,7 +239,7 @@ legen, sonst wäre die Datenbank theoretisch über HTTP erreichbar.
 Nach Änderungen am Projekt vom eigenen Rechner aus:
 
 ```bash
-rsync -avz --delete --exclude node_modules --exclude server/data --exclude server/.env ./ root@kungfu-spirit.de:/opt/chogar/site/
+rsync -avz --delete --exclude node_modules --exclude server/data --exclude server/.env ./ root@chogarkungfu.com:/opt/chogar/site/
 ```
 
 Danach auf dem Server:
@@ -266,7 +269,7 @@ täglich, das ersetzt aber kein eigenes Backup, das du auch herunterlädst.
 - [ ] `SITE_URL` auf die echte HTTPS-Adresse (Passwort-Reset-Links werden daraus gebaut)
 - [ ] SMTP eingetragen und eine Test-Registrierung durchgeklickt
 - [ ] Instructor-Passwort geändert
-- [ ] `https://kungfu-spirit.de/server/` liefert 404 (die App blockt den Ordner)
+- [ ] `https://chogarkungfu.com/server/` liefert 404 (die App blockt den Ordner)
 - [ ] Backup läuft und wurde einmal zurückgespielt
 - [ ] Impressum und Datenschutzerklärung mit dem tatsächlichen Hoster ergänzt:
       in `privacy.html` Abschnitt 4 (Hosting) und 9 (E-Mail-Versand) stehen
