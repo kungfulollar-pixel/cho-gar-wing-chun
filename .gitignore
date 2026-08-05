@@ -25,3 +25,7 @@ Desktop.ini
 *.swp
 .vscode/
 .idea/
+
+# Separate demo project - not part of this website, and it confuses
+# auto-detecting deployments (Hostinger built its Vite app instead of the site).
+codenest-hero/
