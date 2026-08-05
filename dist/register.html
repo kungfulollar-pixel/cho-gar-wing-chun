@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Membership Access – Cho Gar Wing Chun</title>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo"><img src="images/logo-header.png" alt="Cho Gar Wing Chun" class="logo-mark"> Cho Gar Wing Chun</a>
+      <nav>
+        <button class="nav-toggle" aria-label="Open menu">☰</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="seminars.html">Seminars</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="login.html" class="btn-login">Member Login</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top:70px;">
+    <div class="container">
+      <span class="eyebrow" style="display:block;text-align:center;">Member Area</span>
+      <h1 class="section-title">Request Access</h1>
+      <p class="section-subtitle">Registration is by approval only. Send your request below — your instructor reviews it personally and unlocks your account.</p>
+
+      <div class="form-card form-card-wide">
+        <div id="register-error" class="form-error"></div>
+        <div id="register-success" class="form-success">
+          <strong>Thank you — your request has been submitted.</strong><br>
+          Your account is now waiting for approval by your instructor. You will be able to sign in as soon as it has been released.
+        </div>
+
+        <form id="register-form">
+          <div class="form-group">
+            <label for="name">Full name *</label>
+            <input type="text" id="name" name="name" autocomplete="name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">E-mail *</label>
+            <input type="email" id="email" name="email" autocomplete="email" required>
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone (optional)</label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel">
+          </div>
+          <div class="form-group">
+            <label for="username">Desired username *</label>
+            <input type="text" id="username" name="username" autocomplete="username" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password * (at least 8 characters)</label>
+            <input type="password" id="password" name="password" autocomplete="new-password" required>
+          </div>
+          <div class="form-group">
+            <label for="password2">Repeat password *</label>
+            <input type="password" id="password2" name="password2" autocomplete="new-password" required>
+          </div>
+          <div class="form-group">
+            <label for="note">Message to your instructor (optional)</label>
+            <textarea id="note" name="note" rows="4" placeholder="Training group, previous experience, when you started training …"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="register-submit">Send Request</button>
+        </form>
+
+        <p class="form-note">Already approved? <a href="login.html" style="color:var(--color-gold-soft);">Sign in here</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p class="footer-legal"><a href="imprint.html">Imprint</a> · <a href="privacy.html">Privacy Policy</a></p>
+        &copy; 2026 Cho Gar Wing Chun. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/cookie-banner.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.getElementById('register-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      var errorBox = document.getElementById('register-error');
+      var successBox = document.getElementById('register-success');
+      var submit = document.getElementById('register-submit');
+      errorBox.style.display = 'none';
+
+      var password = document.getElementById('password').value;
+      var password2 = document.getElementById('password2').value;
+
+      if (password !== password2) {
+        errorBox.textContent = 'The two passwords do not match.';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      submit.disabled = true;
+
+      var result = await choGarRegister({
+        username: document.getElementById('username').value,
+        password: password,
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        note: document.getElementById('note').value
+      });
+
+      if (!result.ok) {
+        errorBox.textContent = result.error;
+        errorBox.style.display = 'block';
+        submit.disabled = false;
+        return;
+      }
+
+      this.reset();
+      this.style.display = 'none';
+      successBox.style.display = 'block';
+    });
+  </script>
+</body>
+</html>

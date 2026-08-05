@@ -2,7 +2,8 @@
 node_modules/
 
 # Build output
-dist/
+# dist/ is deliberately committed: the host's build step kept failing, so the
+# finished web root ships with the repository and needs no build at all.
 build/
 
 # Member data and secrets — the database holds real personal data.
