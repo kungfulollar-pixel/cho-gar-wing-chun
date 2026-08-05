@@ -1,0 +1,10 @@
+{
+  "name": "cho-gar-wing-chun-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static site of Cho Gar Wing Chun Germany. The member backend lives in server/.",
+  "scripts": {
+    "build": "node build.js"
+  }
+}
