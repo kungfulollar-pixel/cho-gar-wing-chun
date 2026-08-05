@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "codenest-hero",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5183"],
+      "cwd": "codenest-hero",
+      "port": 5183
+    },
+    {
+      "name": "chogar-site",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "server", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

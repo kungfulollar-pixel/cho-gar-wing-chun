@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Login – Cho Gar Wing Chun</title>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo"><img src="images/logo-header.png" alt="Cho Gar Wing Chun" class="logo-mark"> Cho Gar Wing Chun</a>
+      <nav>
+        <button class="nav-toggle" aria-label="Open menu">☰</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="seminars.html">Seminars</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="login.html" class="btn-login">Member Login</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top:70px;">
+    <div class="container">
+      <span class="eyebrow" style="display:block;text-align:center;">Member Area</span>
+      <h1 class="section-title">Welcome Back</h1>
+      <p class="section-subtitle">Sign in to view your training progress, attendance and messages from your instructor.</p>
+
+      <div class="form-card">
+        <div class="demo-hint">
+          Accounts are released by your instructor. If your request is still pending, sign-in stays locked until it has been approved.
+        </div>
+        <div id="login-error" class="form-error"></div>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" autocomplete="username" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" autocomplete="current-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="login-submit">Sign In</button>
+        </form>
+        <p class="form-note">
+          <a href="forgot-password.html" style="color:var(--color-gold-soft);">Forgot your password?</a><br>
+          No account yet? <a href="register.html" style="color:var(--color-gold-soft);">Request access</a> — every registration is released by your instructor.<br>
+          Would you like to book a trial class first? <a href="contact.html" style="color:var(--color-gold-soft);">Get in touch</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p class="footer-legal"><a href="imprint.html">Imprint</a> · <a href="privacy.html">Privacy Policy</a></p>
+        &copy; 2026 Cho Gar Wing Chun. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/cookie-banner.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var username = document.getElementById('username').value.trim();
+      var password = document.getElementById('password').value;
+      var errorBox = document.getElementById('login-error');
+      var submit = document.getElementById('login-submit');
+
+      errorBox.style.display = 'none';
+      submit.disabled = true;
+
+      try {
+        var result = await choGarLogin(username, password);
+
+        if (result.ok) {
+          window.location.href = 'member-area.html';
+          return;
+        }
+
+        errorBox.textContent = result.error;
+        errorBox.style.display = 'block';
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

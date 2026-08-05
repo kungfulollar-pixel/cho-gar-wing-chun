@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Requests – Cho Gar Wing Chun</title>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo"><img src="images/logo-header.png" alt="Cho Gar Wing Chun" class="logo-mark"> Cho Gar Wing Chun</a>
+      <nav>
+        <button class="nav-toggle" aria-label="Open menu">☰</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="member-area.html">Member Area</a></li>
+          <li><a href="seminars.html">Seminars</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="#" id="logout-link" class="btn-login">Logout</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top:60px;">
+    <div class="container">
+
+      <div class="member-header">
+        <div class="member-welcome">
+          <h1>Registration Requests</h1>
+          <p>Only released accounts can sign in to the member area.</p>
+        </div>
+        <span class="tag tag-gold" id="pending-badge">0 open requests</span>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="admin-tab is-active" data-filter="pending">Open</button>
+        <button class="admin-tab" data-filter="approved">Approved</button>
+        <button class="admin-tab" data-filter="rejected">Rejected</button>
+        <button class="admin-tab" data-filter="all">All</button>
+      </div>
+
+      <div class="card">
+        <ul class="request-list" id="request-list"></ul>
+        <p class="empty-state" id="empty-state" style="display:none;">No entries in this view.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p class="footer-legal"><a href="imprint.html">Imprint</a> · <a href="privacy.html">Privacy Policy</a></p>
+        &copy; 2026 Cho Gar Wing Chun. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/cookie-banner.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    var currentFilter = 'pending';
+    var listEl = document.getElementById('request-list');
+    var emptyEl = document.getElementById('empty-state');
+
+    var STATUS_LABEL = {
+      pending: 'Waiting for approval',
+      approved: 'Approved',
+      rejected: 'Rejected'
+    };
+
+    function escapeHtml(value) {
+      var div = document.createElement('div');
+      div.textContent = value == null ? '' : String(value);
+      return div.innerHTML;
+    }
+
+    async function render() {
+      var result = await choGarListRequests(currentFilter);
+
+      if (!result.ok) {
+        listEl.innerHTML = '';
+        emptyEl.textContent = result.error;
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      var requests = result.requests;
+      var pending = result.pendingCount;
+      document.getElementById('pending-badge').textContent =
+        pending === 1 ? '1 open request' : pending + ' open requests';
+
+      listEl.innerHTML = '';
+      emptyEl.textContent = 'No entries in this view.';
+      emptyEl.style.display = requests.length ? 'none' : 'block';
+
+      requests.forEach(function (req) {
+        var li = document.createElement('li');
+        li.className = 'request-item';
+
+        var actions = '';
+        if (req.status === 'pending') {
+          actions =
+            '<button class="btn btn-primary" data-action="approve" data-user="' + escapeHtml(req.username) + '">Approve</button>' +
+            '<button class="btn btn-danger" data-action="reject" data-user="' + escapeHtml(req.username) + '">Reject</button>';
+        } else if (req.status === 'approved') {
+          actions =
+            '<button class="btn btn-danger" data-action="reject" data-user="' + escapeHtml(req.username) + '">Withdraw approval</button>';
+        } else {
+          actions =
+            '<button class="btn btn-primary" data-action="approve" data-user="' + escapeHtml(req.username) + '">Approve after all</button>' +
+            '<button class="btn btn-danger" data-action="delete" data-user="' + escapeHtml(req.username) + '">Delete</button>';
+        }
+
+        li.innerHTML =
+          '<div class="request-head">' +
+            '<strong>' + escapeHtml(req.name) + ' &middot; ' + escapeHtml(req.username) + '</strong>' +
+            '<span class="tag tag-' + escapeHtml(req.status) + '">' + escapeHtml(STATUS_LABEL[req.status] || req.status) + '</span>' +
+          '</div>' +
+          '<p class="request-meta">' +
+            'E-mail: ' + escapeHtml(req.email) +
+            (req.phone ? '<br>Phone: ' + escapeHtml(req.phone) : '') +
+            '<br>Requested on: ' + escapeHtml(req.requestedAt) +
+            (req.decidedAt ? '<br>Decided on: ' + escapeHtml(req.decidedAt) : '') +
+            (req.note ? '<br>Message: ' + escapeHtml(req.note) : '') +
+          '</p>' +
+          '<div class="request-actions">' + actions + '</div>';
+
+        listEl.appendChild(li);
+      });
+    }
+
+    listEl.addEventListener('click', async function (e) {
+      var button = e.target.closest('button[data-action]');
+      if (!button) {
+        return;
+      }
+      var username = button.getAttribute('data-user');
+      var action = button.getAttribute('data-action');
+      var result;
+
+      button.disabled = true;
+
+      if (action === 'approve') {
+        result = await choGarApprove(username);
+      } else if (action === 'reject') {
+        result = await choGarReject(username);
+      } else if (action === 'delete') {
+        if (!window.confirm('Delete the request from "' + username + '" permanently?')) {
+          button.disabled = false;
+          return;
+        }
+        result = await choGarDeleteRequest(username);
+      }
+
+      if (result && !result.ok) {
+        window.alert(result.error);
+      }
+      await render();
+    });
+
+    document.querySelectorAll('.admin-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.admin-tab').forEach(function (t) {
+          t.classList.remove('is-active');
+        });
+        tab.classList.add('is-active');
+        currentFilter = tab.getAttribute('data-filter');
+        render();
+      });
+    });
+
+    document.getElementById('logout-link').addEventListener('click', function (e) {
+      e.preventDefault();
+      choGarLogout();
+    });
+
+    (async function () {
+      var instructor = await choGarRequireInstructor();
+      if (instructor) {
+        await render();
+      }
+    })();
+  </script>
+</body>
+</html>

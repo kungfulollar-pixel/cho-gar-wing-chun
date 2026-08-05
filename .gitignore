@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Member data and secrets — the database holds real personal data.
+# server/.gitignore repeats this for the server folder itself.
+server/data/
+.env
+.env.*
+!.env.example
+
+# Local tooling
+.claude/settings.local.json
+
+# OS and editor cruft
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+.vscode/
+.idea/

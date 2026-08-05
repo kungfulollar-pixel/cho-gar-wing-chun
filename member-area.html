@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Member Area – Cho Gar Wing Chun</title>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo"><img src="images/logo-header.png" alt="Cho Gar Wing Chun" class="logo-mark"> Cho Gar Wing Chun</a>
+      <nav>
+        <button class="nav-toggle" aria-label="Open menu">☰</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="seminars.html">Seminars</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="#" id="logout-link" class="btn-login">Logout</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top:60px;">
+    <div class="container">
+
+      <div class="member-header">
+        <div style="display:flex; align-items:center; gap:20px;">
+          <div class="profile-avatar" id="profile-initial">?</div>
+          <div class="member-welcome">
+            <h1 id="profile-name">Welcome</h1>
+            <p>Member since <span id="profile-since">–</span> · <span id="profile-level">–</span></p>
+          </div>
+        </div>
+        <span class="tag tag-gold" id="next-milestone">Next milestone: –</span>
+      </div>
+
+      <div class="card" id="admin-card" style="display:none; margin-bottom:28px;">
+        <h3>Registration Requests</h3>
+        <p style="margin-bottom:18px;">
+          <span id="admin-pending-text">No open requests at the moment.</span>
+          New members can only sign in once you have released their account.
+        </p>
+        <a href="admin-approvals.html" class="btn btn-primary">Review Requests</a>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Training Progress</h3>
+          <div class="progress-row">
+            <span id="level-name">–</span>
+            <span id="level-percent">0%</span>
+          </div>
+          <div class="belt-bar">
+            <div class="belt-bar-fill" id="level-fill" style="width:0%;"></div>
+          </div>
+          <p style="color:var(--color-text-muted); margin-top:16px; margin-bottom:0;">
+            Your progress toward the next training milestone, based on attendance and skill assessment.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Messages from Your Instructor</h3>
+          <div id="messages-list"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:28px;">
+        <h3>Recent Attendance</h3>
+        <ul class="attendance-list" id="attendance-list"></ul>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p class="footer-legal"><a href="imprint.html">Imprint</a> · <a href="privacy.html">Privacy Policy</a></p>
+        &copy; 2026 Cho Gar Wing Chun. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/cookie-banner.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    (async function () {
+    var member = await choGarRequireLogin();
+
+    if (member) {
+      document.getElementById('profile-initial').textContent = member.name.charAt(0);
+      document.getElementById('profile-name').textContent = 'Welcome, ' + member.name;
+      document.getElementById('profile-since').textContent = member.memberSince;
+      document.getElementById('profile-level').textContent = member.levelName;
+      document.getElementById('next-milestone').textContent = 'Next milestone: ' + member.nextMilestone;
+
+      document.getElementById('level-name').textContent = member.levelName;
+      document.getElementById('level-percent').textContent = member.levelProgress + '%';
+      var fill = document.getElementById('level-fill');
+      fill.style.width = member.levelProgress + '%';
+      fill.style.background = 'linear-gradient(90deg, var(--color-red), ' + member.levelColor + ')';
+
+      var attendanceList = document.getElementById('attendance-list');
+      member.attendance.forEach(function (entry) {
+        var li = document.createElement('li');
+        var date = document.createElement('span');
+        date.className = 'date';
+        date.textContent = entry.date;
+        var name = document.createElement('span');
+        name.textContent = entry.session;
+        li.append(date, name);
+        attendanceList.appendChild(li);
+      });
+
+      var messagesList = document.getElementById('messages-list');
+      member.messages.forEach(function (msg) {
+        var p = document.createElement('p');
+        p.style.color = 'var(--color-text-muted)';
+        var sender = document.createElement('strong');
+        sender.style.color = 'var(--color-gold-soft)';
+        sender.textContent = msg.from + ': ';
+        p.append(sender, document.createTextNode(msg.text));
+        messagesList.appendChild(p);
+      });
+
+      if (member.role === 'instructor') {
+        var requests = await choGarListRequests('pending');
+        var pending = requests.ok ? requests.pendingCount : 0;
+        document.getElementById('admin-card').style.display = 'block';
+        document.getElementById('admin-pending-text').textContent = pending === 0
+          ? 'No open requests at the moment.'
+          : (pending === 1 ? '1 request is waiting for your approval.' : pending + ' requests are waiting for your approval.');
+      }
+    }
+
+    document.getElementById('logout-link').addEventListener('click', function (e) {
+      e.preventDefault();
+      choGarLogout();
+    });
+    })();
+  </script>
+</body>
+</html>
