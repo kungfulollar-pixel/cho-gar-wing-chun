@@ -5,6 +5,11 @@
   "type": "module",
   "description": "Static site of Cho Gar Wing Chun Germany. The member backend lives in server/.",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemailer": "^9.0.3"
   }
 }
