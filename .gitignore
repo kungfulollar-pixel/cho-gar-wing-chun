@@ -15,6 +15,9 @@ server/data/
 # Local tooling
 .claude/settings.local.json
 
+# Upload packages built for the web host
+*.zip
+
 # OS and editor cruft
 Thumbs.db
 Desktop.ini
