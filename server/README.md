@@ -23,25 +23,30 @@ the password yourself, set `CHOGAR_ADMIN_PASSWORD` before the first start.
 
 ## Configuration (environment variables)
 
-Copy `.env.example` to `.env` and start with `node --env-file=.env server.js`.
+**Nothing has to be configured.** Every value has a working default, so the app
+runs on the live host with `SMTP_PASS` alone — the managed panel kept losing
+entries, so the settings live in the code instead. Copy `.env.example` to `.env`
+and start with `node --env-file=.env server.js` to override anything locally.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
+| `SMTP_PASS` | – | **The only one the live site needs.** Without it no mail is sent — messages go to the log |
 | `PORT` | `3000` | Port of the web server |
-| `NODE_ENV` | – | Set to `production` on the live server: session cookie becomes `Secure`, and the reverse proxy's `X-Forwarded-For` is trusted |
+| `NODE_ENV` | – | `production` makes the session cookie `Secure`, trusts the reverse proxy and moves the database to the home directory |
 | `TRUST_PROXY_HOPS` | `1` | Number of proxies in front of the app (production only) |
-| `SITE_URL` | `http://localhost:3000` | Public address, used for links inside e-mails |
-| `SMTP_HOST` | – | SMTP server. **Empty means no mail is sent** — messages are printed to the console |
-| `SMTP_PORT` | `587` | `465` uses TLS directly, anything else STARTTLS |
-| `SMTP_USER` / `SMTP_PASS` | – | SMTP credentials (omit for a relay without auth) |
-| `MAIL_FROM` | `Cho Gar Wing Chun <no-reply@localhost>` | Sender address |
-| `CHOGAR_DATA_DIR` | `server/data` | Folder holding the SQLite database |
+| `SITE_URL` | `https://chogarkungfu.com` in production, else `http://localhost:3000` | Public address; password-reset links are built from it |
+| `SMTP_HOST` | `smtp.hostinger.com` | SMTP server |
+| `SMTP_PORT` | `465` | `465` uses TLS directly, anything else STARTTLS |
+| `SMTP_USER` | `nils@chogarkungfu.com` | Mailbox used for sending |
+| `MAIL_FROM` | `Cho Gar Wing Chun <SMTP_USER>` | Sender address |
+| `CHOGAR_DATA_DIR` | `~/chogar-data` in production, else `server/data` | Folder holding the SQLite database — must stay outside the deployed folder |
+| `CHOGAR_ADMIN_EMAIL` | `nils@chogarkungfu.com` | Instructor address; applied on **every** start, so it can be corrected |
 | `CHOGAR_ADMIN_USER` | `instructor` | Username of the first instructor account |
 | `CHOGAR_ADMIN_PASSWORD` | randomly generated | Password of the first instructor account |
 | `CHOGAR_ADMIN_NAME` | `Sifu Nils Ring` | Display name |
-| `CHOGAR_ADMIN_EMAIL` | `sifu@kungfu-spirit.de` | E-mail address, also where new-request notifications go |
+| `CHOGAR_ADMIN_RESET_PASSWORD` | – | Emergency reset: sets a new instructor password on restart. **Remove it again afterwards** |
 
-The four `CHOGAR_ADMIN_*` variables are only used on the *first* start —
+`CHOGAR_ADMIN_USER`, `_PASSWORD` and `_NAME` are only used on the *first* start —
 afterwards the account lives in the database.
 
 ## E-mails
@@ -116,16 +121,17 @@ Withdrawing an approval immediately ends every session of that member.
 - The site loads no third-party resources: GSAP lives in `js/vendor/` and the
   webfonts in `css/fonts/`, so no request ever reaches Google or a CDN.
 
-### Before going live
+### Running live
 
-Step-by-step instructions for a dogado server are in
-[DEPLOY-dogado.md](DEPLOY-dogado.md).
+The site is deployed on Hostinger — setup, pitfalls and how to check it are in
+[DEPLOY.md](DEPLOY.md).
 
-- Run behind HTTPS and set `NODE_ENV=production`, otherwise the session cookie
-  is sent without the `Secure` flag. The server prints a warning while that is
-  the case.
-- Set `SITE_URL` to the public address — password-reset links are built from it.
-- Configure SMTP, otherwise nobody is notified of anything.
-- Back up `server/data/chogar.db` regularly. It holds all member data.
-- Change the instructor password from the generated one:
-  `node server/set-password.js instructor "…"`.
+- Set `SMTP_PASS`, otherwise nobody is notified of anything.
+- Run behind HTTPS with `NODE_ENV=production`, otherwise the session cookie is
+  sent without the `Secure` flag. The server warns in the log while that is the
+  case. Hostinger sets the variable itself.
+- Back up the database regularly — `~/chogar-data/chogar.db` in production. It
+  holds all member data.
+- Change the instructor password from the generated one. With shell access:
+  `node server/set-password.js instructor "…"`. On a managed host without one,
+  use `CHOGAR_ADMIN_RESET_PASSWORD` and remove the variable afterwards.

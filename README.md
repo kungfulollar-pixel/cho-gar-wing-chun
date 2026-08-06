@@ -46,8 +46,9 @@ the full API are documented in [server/README.md](server/README.md).
 
 ## Deployment
 
-Step-by-step instructions for a dogado server (vServer with nginx and systemd,
-or Plesk) are in [server/DEPLOY-dogado.md](server/DEPLOY-dogado.md).
+The site runs at <https://chogarkungfu.com> as a Node.js web app on Hostinger and
+redeploys itself on every push to `main`. How it is set up, what can go wrong and
+how to check it: [server/DEPLOY.md](server/DEPLOY.md).
 
 ## Not in this repository
 
