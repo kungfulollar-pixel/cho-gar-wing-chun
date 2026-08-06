@@ -36,6 +36,20 @@ async function choGarApi(path, options) {
   return { status: response.status, data };
 }
 
+/* ---------- contact form ---------- */
+
+/*
+  data: { name, email, message }
+  Returns { ok: true } or { ok: false, error: '<message>' }
+*/
+async function choGarSendContact(data) {
+  const result = await choGarApi('/api/contact', { method: 'POST', body: data });
+  if (result.status === 200) {
+    return { ok: true };
+  }
+  return { ok: false, error: result.data.error || 'Your message could not be sent. Please try again later.' };
+}
+
 /* ---------- registration ---------- */
 
 /*

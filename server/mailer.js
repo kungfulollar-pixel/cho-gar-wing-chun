@@ -47,7 +47,7 @@ export function siteUrl() {
   Never let a mail failure break the request that triggered it — a registration
   must succeed even when the mail server is down.
 */
-export async function sendMail({ to, subject, text }) {
+export async function sendMail({ to, subject, text, replyTo }) {
   if (!transport) {
     console.log('\n--- e-mail (SMTP not configured, printed instead) ---');
     console.log(`To:      ${to}`);
@@ -58,7 +58,12 @@ export async function sendMail({ to, subject, text }) {
   }
 
   try {
-    const info = await transport.sendMail({ from, to, subject, text });
+    /*
+      replyTo carries the visitor's address on contact messages, so hitting
+      "reply" answers them directly. The envelope sender stays our own mailbox —
+      sending as a foreign domain would fail SPF and land in spam.
+    */
+    const info = await transport.sendMail({ from, to, subject, text, replyTo });
     /* Logged on purpose: without it a silently dropped mail is indistinguishable
        from one that was never attempted. */
     console.log(`Mail sent to ${to} ("${subject}") — server said: ${info.response || 'accepted'}`);
@@ -70,6 +75,18 @@ export async function sendMail({ to, subject, text }) {
 }
 
 /* ---------- templates ---------- */
+
+export function contactMail(enquiry) {
+  return {
+    subject: `Contact form: ${enquiry.name}`,
+    text:
+      `${enquiry.name} wrote through the contact form on ${siteUrl()}.\n\n` +
+      `Name:   ${enquiry.name}\n` +
+      `E-mail: ${enquiry.email}\n\n` +
+      `Message:\n${enquiry.message}\n\n` +
+      `Reply to this e-mail to answer directly.\n`
+  };
+}
 
 export function newRequestMail(request) {
   return {

@@ -33,6 +33,7 @@ import {
 } from './auth.js';
 import {
   approvedMail,
+  contactMail,
   mailConfigured,
   newRequestMail,
   passwordResetMail,
@@ -209,6 +210,59 @@ function requireInstructor(req, res, next) {
   }
   next();
 }
+
+/* ---------- contact form ---------- */
+
+/*
+  Enquiries from contact.html. The message is mailed to the instructors with the
+  sender in Reply-To, so answering is one click. Nothing is stored — there is no
+  reason to keep enquiries in the member database.
+*/
+app.post('/api/contact', async (req, res) => {
+  const body = req.body || {};
+  const name = String(body.name || '').trim();
+  const email = String(body.email || '').trim();
+  const message = String(body.message || '').trim();
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Please fill in name, e-mail address and message.' });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Please enter a valid e-mail address.' });
+  }
+  if (name.length > 120 || email.length > 160 || message.length > 5000) {
+    return res.status(400).json({ error: 'One of the fields is too long.' });
+  }
+
+  /* Same throttle as the password reset: keeps the form from becoming a relay. */
+  const throttleKey = `contact:${req.ip}`;
+  if (isThrottled(throttleKey)) {
+    return res.status(429).json({ error: 'Too many messages. Please try again in 15 minutes.' });
+  }
+  recordFailedAttempt(throttleKey);
+
+  const instructors = db.prepare("SELECT email FROM members WHERE role = 'instructor' AND email != ''").all();
+  const recipients = instructors.length
+    ? instructors.map((instructor) => instructor.email)
+    : [process.env.CHOGAR_ADMIN_EMAIL || 'nils@chogarkungfu.com'];
+
+  const mail = contactMail({ name, email, message });
+  let delivered = false;
+  for (const to of recipients) {
+    const result = await sendMail({ to, subject: mail.subject, text: mail.text, replyTo: `${name} <${email}>` });
+    delivered = delivered || result.sent === true;
+  }
+
+  /*
+    Without SMTP the message only reaches the log. Saying "thank you" then would
+    be a lie, so the visitor is told to use the e-mail address instead.
+  */
+  if (!delivered && mailConfigured) {
+    return res.status(502).json({ error: 'Your message could not be sent. Please write to us by e-mail instead.' });
+  }
+
+  res.json({ ok: true });
+});
 
 /* ---------- registration ---------- */
 

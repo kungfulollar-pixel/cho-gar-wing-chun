@@ -48,8 +48,10 @@
         </div>
 
         <div class="form-card" style="margin:0;">
-          <div id="contact-success" class="demo-hint" style="display:none;">
-            Thank you for your message! This is a demo website without a live mail connection — in production, your request would now be sent to us by email.
+          <div id="contact-error" class="form-error"></div>
+          <div id="contact-success" class="form-success">
+            <strong>Thank you for your message.</strong><br>
+            It has reached us and we will reply to the address you gave us.
           </div>
           <form id="contact-form">
             <div class="form-group">
@@ -64,7 +66,7 @@
               <label for="message">Message</label>
               <textarea id="message" name="message" rows="5" required></textarea>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+            <button type="submit" class="btn btn-primary btn-block" id="contact-submit">Send Message</button>
           </form>
         </div>
       </div>
@@ -116,11 +118,37 @@
   <script src="js/animations.js"></script>
   <script src="js/main.js"></script>
   <script src="js/cookie-banner.js"></script>
+  <script src="js/auth.js"></script>
   <script>
-    document.getElementById('contact-form').addEventListener('submit', function (e) {
+    document.getElementById('contact-form').addEventListener('submit', async function (e) {
       e.preventDefault();
-      document.getElementById('contact-success').style.display = 'block';
-      e.target.reset();
+
+      var errorBox = document.getElementById('contact-error');
+      var successBox = document.getElementById('contact-success');
+      var submit = document.getElementById('contact-submit');
+
+      errorBox.style.display = 'none';
+      submit.disabled = true;
+      submit.textContent = 'Sending …';
+
+      var result = await choGarSendContact({
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        message: document.getElementById('message').value
+      });
+
+      submit.textContent = 'Send Message';
+
+      if (!result.ok) {
+        errorBox.textContent = result.error;
+        errorBox.style.display = 'block';
+        submit.disabled = false;
+        return;
+      }
+
+      this.reset();
+      this.style.display = 'none';
+      successBox.style.display = 'block';
     });
   </script>
 </body>
