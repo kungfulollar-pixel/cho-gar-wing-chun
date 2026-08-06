@@ -95,6 +95,39 @@ function findMember(username) {
   return db.prepare('SELECT * FROM members WHERE username = ?').get(String(username || '').trim().toLowerCase());
 }
 
+/*
+  Members sign in with their e-mail address. The username still exists as the
+  internal handle (and the instructor account was created with one), so both
+  are accepted here.
+*/
+function findMemberByLogin(identifier) {
+  const value = String(identifier || '').trim().toLowerCase();
+  if (!value) {
+    return undefined;
+  }
+  return db.prepare('SELECT * FROM members WHERE username = ? OR lower(email) = ?').get(value, value);
+}
+
+/*
+  Registration asks for an e-mail address, not a username — one is derived from
+  the address and made unique, so nothing in the database has to change.
+*/
+function usernameForEmail(email) {
+  const cleaned = String(email).split('@')[0].toLowerCase().replace(/[^a-z0-9._-]/g, '');
+  const base = (cleaned.length >= 3 ? cleaned : `${cleaned}member`).slice(0, 20);
+
+  if (!findMember(base)) {
+    return base;
+  }
+  for (let suffix = 2; suffix < 1000; suffix += 1) {
+    const candidate = `${base}${suffix}`;
+    if (!findMember(candidate)) {
+      return candidate;
+    }
+  }
+  return `${base}${Date.now().toString().slice(-4)}`;
+}
+
 /* Shape a member row for the browser — never includes the password hash. */
 function toProfile(row) {
   const attendance = db
@@ -181,20 +214,14 @@ function requireInstructor(req, res, next) {
 
 app.post('/api/register', (req, res) => {
   const body = req.body || {};
-  const username = String(body.username || '').trim().toLowerCase();
   const password = String(body.password || '');
   const name = String(body.name || '').trim();
   const email = String(body.email || '').trim();
   const phone = String(body.phone || '').trim();
   const note = String(body.note || '').trim();
 
-  if (!username || !password || !name || !email) {
+  if (!password || !name || !email) {
     return res.status(400).json({ error: 'Please fill in all required fields.' });
-  }
-  if (!/^[a-z0-9._-]{3,24}$/.test(username)) {
-    return res.status(400).json({
-      error: 'The username must be 3–24 characters and may only contain letters, numbers, dot, hyphen or underscore.'
-    });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Please enter a valid e-mail address.' });
@@ -205,9 +232,11 @@ app.post('/api/register', (req, res) => {
   if (name.length > 120 || email.length > 160 || phone.length > 40 || note.length > 1000) {
     return res.status(400).json({ error: 'One of the fields is too long.' });
   }
-  if (findMember(username)) {
-    return res.status(409).json({ error: 'This username is already taken. Please choose another one.' });
+  if (findMemberByLogin(email)) {
+    return res.status(409).json({ error: 'An account already exists for this e-mail address.' });
   }
+
+  const username = usernameForEmail(email);
 
   db.prepare(
     `INSERT INTO members (username, password_hash, name, email, phone, note, role, status, member_since, requested_at)
@@ -228,18 +257,19 @@ app.post('/api/register', (req, res) => {
 
 app.post('/api/login', (req, res) => {
   const body = req.body || {};
-  const username = String(body.username || '').trim().toLowerCase();
+  /* "username" stays accepted so an older cached page keeps working. */
+  const identifier = String(body.identifier || body.username || '').trim().toLowerCase();
   const password = String(body.password || '');
-  const throttleKey = `${req.ip}:${username}`;
+  const throttleKey = `${req.ip}:${identifier}`;
 
   if (isThrottled(throttleKey)) {
     return res.status(429).json({ reason: 'throttled', error: 'Too many attempts. Please try again in 15 minutes.' });
   }
 
-  const member = findMember(username);
+  const member = findMemberByLogin(identifier);
   if (!member || !verifyPassword(password, member.password_hash)) {
     recordFailedAttempt(throttleKey);
-    return res.status(401).json({ reason: 'credentials', error: 'Username or password is incorrect.' });
+    return res.status(401).json({ reason: 'credentials', error: 'E-mail address or password is incorrect.' });
   }
   if (member.status === 'pending') {
     return res.status(403).json({

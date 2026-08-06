@@ -39,7 +39,8 @@ async function choGarApi(path, options) {
 /* ---------- registration ---------- */
 
 /*
-  data: { username, password, name, email, phone, note }
+  data: { name, email, password, phone, note }
+  The server derives the internal username from the e-mail address.
   Returns { ok: true } or { ok: false, error: '<message>' }
 */
 async function choGarRegister(data) {
@@ -56,10 +57,10 @@ async function choGarRegister(data) {
   Returns { ok: true, member } or
           { ok: false, reason: 'credentials' | 'pending' | 'rejected' | 'throttled', error }
 */
-async function choGarLogin(username, password) {
+async function choGarLogin(identifier, password) {
   const result = await choGarApi('/api/login', {
     method: 'POST',
-    body: { username: username, password: password }
+    body: { identifier: identifier, password: password }
   });
 
   if (result.status === 200) {
@@ -110,7 +111,7 @@ async function choGarRequireInstructor() {
 /* ---------- password reset ---------- */
 
 /*
-  identifier: username or e-mail address.
+  identifier: e-mail address (a username still works).
   Always resolves with { ok: true } when the request went through — the server
   deliberately does not reveal whether the account exists.
 */
