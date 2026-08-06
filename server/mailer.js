@@ -8,12 +8,22 @@
 
 import nodemailer from 'nodemailer';
 
-const host = process.env.SMTP_HOST;
-const port = Number(process.env.SMTP_PORT || 587);
-const user = process.env.SMTP_USER;
+/*
+  Defaults describe the live setup (Hostinger mailbox of chogarkungfu.com), so
+  the app is configured out of the box. Only the password has to come from the
+  environment — a secret does not belong in a repository.
+*/
+const host = process.env.SMTP_HOST || 'smtp.hostinger.com';
+const port = Number(process.env.SMTP_PORT || 465);
+const user = process.env.SMTP_USER || 'nils@chogarkungfu.com';
 const pass = process.env.SMTP_PASS;
 
-export const mailConfigured = Boolean(host);
+/*
+  Without the password the server would hand every message to a mail server
+  that rejects it. Printing to the log instead keeps registration and password
+  reset usable and makes the missing SMTP_PASS visible.
+*/
+export const mailConfigured = Boolean(host && pass);
 
 const transport = mailConfigured
   ? nodemailer.createTransport({
@@ -25,10 +35,12 @@ const transport = mailConfigured
     })
   : null;
 
-const from = process.env.MAIL_FROM || 'Cho Gar Wing Chun <no-reply@localhost>';
+const from = process.env.MAIL_FROM || `Cho Gar Wing Chun <${user}>`;
 
+/* Password-reset links are built from this — a wrong value makes them useless. */
 export function siteUrl() {
-  return (process.env.SITE_URL || 'http://localhost:3000').replace(/\/+$/, '');
+  const fallback = process.env.NODE_ENV === 'production' ? 'https://chogarkungfu.com' : 'http://localhost:3000';
+  return (process.env.SITE_URL || fallback).replace(/\/+$/, '');
 }
 
 /*

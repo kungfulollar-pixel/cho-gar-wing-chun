@@ -449,7 +449,7 @@ function seedInstructor() {
     username,
     hashPassword(password),
     process.env.CHOGAR_ADMIN_NAME || 'Sifu Nils Ring',
-    process.env.CHOGAR_ADMIN_EMAIL || 'sifu@kungfu-spirit.de',
+    process.env.CHOGAR_ADMIN_EMAIL || 'nils@chogarkungfu.com',
     'Head Instructor — Cho Family Lineage',
     today(),
     today()
@@ -508,7 +508,7 @@ function applyAdminPasswordReset() {
   would be delivered, so being able to correct it without a shell matters.
 */
 function applyAdminEmail() {
-  const wanted = String(process.env.CHOGAR_ADMIN_EMAIL || '').trim();
+  const wanted = String(process.env.CHOGAR_ADMIN_EMAIL || 'nils@chogarkungfu.com').trim();
   if (!wanted) {
     return;
   }

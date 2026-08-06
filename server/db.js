@@ -5,11 +5,24 @@
 
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const dataDir = process.env.CHOGAR_DATA_DIR || join(here, 'data');
+
+/*
+  Where the database lives.
+
+  In production it must sit OUTSIDE the deployed folder — managed hosts replace
+  that folder on every deployment, which would wipe every member account. The
+  home directory survives, so that is the default; CHOGAR_DATA_DIR still wins
+  when it is set. In development the old server/data stays, so a checkout keeps
+  its own throwaway database.
+*/
+const dataDir =
+  process.env.CHOGAR_DATA_DIR ||
+  (process.env.NODE_ENV === 'production' ? join(homedir(), 'chogar-data') : join(here, 'data'));
 
 mkdirSync(dataDir, { recursive: true });
 
