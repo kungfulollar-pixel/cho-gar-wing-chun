@@ -502,7 +502,35 @@ function applyAdminPasswordReset() {
   console.log('  Remove that variable now — otherwise it resets on every restart.\n');
 }
 
+/*
+  Keep the instructor's e-mail address in sync with the environment. It is where
+  registration notices go and where a password-reset link for the instructor
+  would be delivered, so being able to correct it without a shell matters.
+*/
+function applyAdminEmail() {
+  const wanted = String(process.env.CHOGAR_ADMIN_EMAIL || '').trim();
+  if (!wanted) {
+    return;
+  }
+
+  const username = (process.env.CHOGAR_ADMIN_USER || 'instructor').trim().toLowerCase();
+  const member = findMember(username);
+  if (!member || member.email === wanted) {
+    return;
+  }
+
+  const clash = findMemberByLogin(wanted);
+  if (clash && clash.id !== member.id) {
+    console.log(`CHOGAR_ADMIN_EMAIL "${wanted}" already belongs to another account — not changed.`);
+    return;
+  }
+
+  db.prepare('UPDATE members SET email = ? WHERE id = ?').run(wanted, member.id);
+  console.log(`E-mail address for "${username}" set to ${wanted} from CHOGAR_ADMIN_EMAIL.`);
+}
+
 seedInstructor();
+applyAdminEmail();
 applyAdminPasswordReset();
 
 app.listen(PORT, () => {
