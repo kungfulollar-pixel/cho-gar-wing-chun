@@ -58,10 +58,13 @@ export async function sendMail({ to, subject, text }) {
   }
 
   try {
-    await transport.sendMail({ from, to, subject, text });
+    const info = await transport.sendMail({ from, to, subject, text });
+    /* Logged on purpose: without it a silently dropped mail is indistinguishable
+       from one that was never attempted. */
+    console.log(`Mail sent to ${to} ("${subject}") — server said: ${info.response || 'accepted'}`);
     return { sent: true };
   } catch (error) {
-    console.error(`Could not send mail to ${to}:`, error.message);
+    console.error(`Could not send mail to ${to}: ${error.code || ''} ${error.message}`);
     return { sent: false, error: error.message };
   }
 }

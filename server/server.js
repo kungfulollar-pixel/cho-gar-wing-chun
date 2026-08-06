@@ -212,7 +212,7 @@ function requireInstructor(req, res, next) {
 
 /* ---------- registration ---------- */
 
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const body = req.body || {};
   const password = String(body.password || '');
   const name = String(body.name || '').trim();
@@ -247,7 +247,7 @@ app.post('/api/register', (req, res) => {
   const instructors = db.prepare("SELECT email FROM members WHERE role = 'instructor' AND email != ''").all();
   const mail = newRequestMail({ username, name, email, phone, note });
   for (const instructor of instructors) {
-    sendMail({ to: instructor.email, subject: mail.subject, text: mail.text });
+    await sendMail({ to: instructor.email, subject: mail.subject, text: mail.text });
   }
 
   res.status(201).json({ ok: true, status: 'pending' });
@@ -305,11 +305,11 @@ app.get('/api/me', requireLogin, (req, res) => {
   Always answers 200, whether or not the account exists — otherwise this
   endpoint would tell an attacker which e-mail addresses are registered.
 */
-app.post('/api/password/forgot', (req, res) => {
+app.post('/api/password/forgot', async (req, res) => {
   const identifier = String((req.body || {}).identifier || '').trim().toLowerCase();
 
   if (!identifier) {
-    return res.status(400).json({ error: 'Please enter your username or e-mail address.' });
+    return res.status(400).json({ error: 'Please enter your e-mail address.' });
   }
   if (isThrottled(`forgot:${req.ip}`)) {
     return res.status(429).json({ error: 'Too many attempts. Please try again in 15 minutes.' });
@@ -324,7 +324,12 @@ app.post('/api/password/forgot', (req, res) => {
   if (member && member.status === 'approved' && member.email) {
     const token = createPasswordReset(member.id);
     const mail = passwordResetMail(member, token);
-    sendMail({ to: member.email, subject: mail.subject, text: mail.text });
+    /*
+      Awaited on purpose. Fire-and-forget loses the message whenever the host
+      recycles the process right after the response, and it hides the outcome:
+      sendMail swallows failures, so the answer stays 200 either way.
+    */
+    await sendMail({ to: member.email, subject: mail.subject, text: mail.text });
   }
 
   res.json({ ok: true });
@@ -363,7 +368,7 @@ app.get('/api/admin/requests', requireInstructor, (req, res) => {
   res.json({ requests: rows.map(toRequest), pendingCount: pending });
 });
 
-app.post('/api/admin/requests/:username/status', requireInstructor, (req, res) => {
+app.post('/api/admin/requests/:username/status', requireInstructor, async (req, res) => {
   const status = String((req.body || {}).status || '');
   if (status !== 'approved' && status !== 'rejected') {
     return res.status(400).json({ error: 'Status must be "approved" or "rejected".' });
@@ -398,7 +403,7 @@ app.post('/api/admin/requests/:username/status', requireInstructor, (req, res) =
   /* Let the member know about the decision. */
   if (member.status !== status && member.email) {
     const mail = status === 'approved' ? approvedMail(member) : rejectedMail(member);
-    sendMail({ to: member.email, subject: mail.subject, text: mail.text });
+    await sendMail({ to: member.email, subject: mail.subject, text: mail.text });
   }
 
   res.json({ ok: true, status });
