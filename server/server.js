@@ -435,7 +435,45 @@ function seedInstructor() {
   }
 }
 
+/*
+  Emergency password reset without a shell.
+
+  CHOGAR_ADMIN_PASSWORD only applies while the instructor account is being
+  created — once it exists, the generated password is gone for good, and on a
+  managed host there is no console to run set-password.js from. Setting
+  CHOGAR_ADMIN_RESET_PASSWORD and restarting sets a new password instead.
+
+  Remove the variable afterwards: as long as it is set, every restart resets
+  the password again, and it sits readable in the hosting panel.
+*/
+function applyAdminPasswordReset() {
+  const wanted = process.env.CHOGAR_ADMIN_RESET_PASSWORD;
+  if (!wanted) {
+    return;
+  }
+
+  const username = (process.env.CHOGAR_ADMIN_USER || 'instructor').trim().toLowerCase();
+
+  if (wanted.length < 8) {
+    console.log('CHOGAR_ADMIN_RESET_PASSWORD is shorter than 8 characters — ignored.');
+    return;
+  }
+
+  const member = findMember(username);
+  if (!member) {
+    console.log(`CHOGAR_ADMIN_RESET_PASSWORD is set, but there is no account "${username}".`);
+    return;
+  }
+
+  db.prepare('UPDATE members SET password_hash = ? WHERE id = ?').run(hashPassword(wanted), member.id);
+  destroyAllSessionsFor(member.id);
+
+  console.log(`\n  Password for "${username}" was reset from CHOGAR_ADMIN_RESET_PASSWORD.`);
+  console.log('  Remove that variable now — otherwise it resets on every restart.\n');
+}
+
 seedInstructor();
+applyAdminPasswordReset();
 
 app.listen(PORT, () => {
   console.log(`Cho Gar Wing Chun running at http://localhost:${PORT}`);
