@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribe – Cho Gar Wing Chun</title>
+  <meta name="description" content="Unsubscribe from the Cho Gar Wing Chun newsletter.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo"><img src="images/logo-header.png" alt="Cho Gar Wing Chun" class="logo-mark"> Cho Gar Wing Chun</a>
+      <nav>
+        <button class="nav-toggle" aria-label="Open menu">☰</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="seminars.html">Seminars</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="login.html" class="btn-login">Member Login</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top:70px;">
+    <div class="container">
+      <span class="eyebrow" style="display:block;text-align:center;">Newsletter</span>
+      <h1 class="section-title">Unsubscribe</h1>
+      <p class="section-subtitle">One click and your address is removed. We keep nothing.</p>
+
+      <div class="form-card">
+        <div id="unsub-error" class="form-error"></div>
+        <div id="unsub-success" class="form-success">
+          <strong>You have been unsubscribed.</strong><br>
+          Your address has been deleted. You will not receive any further newsletters from us.
+        </div>
+        <form id="unsub-form">
+          <button type="submit" class="btn btn-primary btn-block" id="unsub-submit">Unsubscribe Now</button>
+        </form>
+        <p class="form-note"><a href="index.html" style="color:var(--color-gold-soft);">Back to the homepage</a></p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p class="footer-legal"><a href="imprint.html">Imprint</a> · <a href="privacy.html">Privacy Policy</a></p>
+        &copy; 2026 Cho Gar Wing Chun. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/vendor/gsap.min.js"></script>
+  <script src="js/vendor/ScrollTrigger.min.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/cookie-banner.js"></script>
+  <script>
+    /*
+      Deliberately a button rather than an automatic call: mail clients and spam
+      filters fetch links in the background, which would unsubscribe people who
+      never clicked anything.
+    */
+    var unsubToken = new URLSearchParams(window.location.search).get('token') || '';
+    var unsubError = document.getElementById('unsub-error');
+
+    if (!unsubToken) {
+      document.getElementById('unsub-form').style.display = 'none';
+      unsubError.textContent = 'This link is incomplete. Please open the link from your e-mail again.';
+      unsubError.style.display = 'block';
+    }
+
+    document.getElementById('unsub-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      var submit = document.getElementById('unsub-submit');
+      unsubError.style.display = 'none';
+      submit.disabled = true;
+
+      var response;
+      try {
+        response = await fetch('/api/newsletter/unsubscribe', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: unsubToken })
+        });
+      } catch (err) {
+        response = null;
+      }
+
+      if (response && response.ok) {
+        this.style.display = 'none';
+        document.getElementById('unsub-success').style.display = 'block';
+        return;
+      }
+
+      unsubError.textContent = 'Your address could not be removed. Please write to us instead.';
+      unsubError.style.display = 'block';
+      submit.disabled = false;
+    });
+  </script>
+</body>
+</html>

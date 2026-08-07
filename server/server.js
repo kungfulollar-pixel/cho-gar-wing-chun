@@ -11,7 +11,7 @@
 */
 
 import express from 'express';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -36,6 +36,7 @@ import {
   contactMail,
   mailConfigured,
   newRequestMail,
+  newsletterConfirmMail,
   passwordResetMail,
   rejectedMail,
   sendMail
@@ -210,6 +211,100 @@ function requireInstructor(req, res, next) {
   }
   next();
 }
+
+/* ---------- newsletter (double opt-in) ---------- */
+
+const NEWSLETTER_CONFIRM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+function hashToken(token) {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+/*
+  Step 1 of the double opt-in: the address is stored as "pending" and receives a
+  confirmation link. Nothing may be sent to it before that link is opened.
+
+  Answers 200 whatever happens — otherwise the form would reveal which addresses
+  are already subscribed.
+*/
+app.post('/api/newsletter/subscribe', async (req, res) => {
+  const email = String((req.body || {}).email || '').trim();
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 160) {
+    return res.status(400).json({ error: 'Please enter a valid e-mail address.' });
+  }
+
+  const throttleKey = `newsletter:${req.ip}`;
+  if (isThrottled(throttleKey)) {
+    return res.status(429).json({ error: 'Too many attempts. Please try again in 15 minutes.' });
+  }
+  recordFailedAttempt(throttleKey);
+
+  const existing = db.prepare('SELECT * FROM newsletter_subscribers WHERE lower(email) = ?').get(email.toLowerCase());
+
+  /* Already confirmed: stay silent rather than send another confirmation mail. */
+  if (existing && existing.status === 'confirmed') {
+    return res.json({ ok: true });
+  }
+
+  const token = randomBytes(32).toString('hex');
+  const expires = Date.now() + NEWSLETTER_CONFIRM_TTL_MS;
+
+  if (existing) {
+    db.prepare(
+      'UPDATE newsletter_subscribers SET confirm_hash = ?, confirm_expires = ?, requested_at = ?, requested_ip = ? WHERE id = ?'
+    ).run(hashToken(token), expires, new Date().toISOString(), req.ip || '', existing.id);
+  } else {
+    db.prepare(
+      `INSERT INTO newsletter_subscribers (email, status, confirm_hash, confirm_expires, unsubscribe_token, requested_at, requested_ip)
+       VALUES (?, 'pending', ?, ?, ?, ?, ?)`
+    ).run(email, hashToken(token), expires, randomBytes(24).toString('hex'), new Date().toISOString(), req.ip || '');
+  }
+
+  const mail = newsletterConfirmMail(token);
+  await sendMail({ to: email, subject: mail.subject, text: mail.text });
+
+  res.json({ ok: true });
+});
+
+/* Step 2: opening the link turns the pending entry into a subscription. */
+app.post('/api/newsletter/confirm', (req, res) => {
+  const token = String((req.body || {}).token || '');
+  if (!token) {
+    return res.status(400).json({ error: 'This link is incomplete.' });
+  }
+
+  const row = db
+    .prepare('SELECT * FROM newsletter_subscribers WHERE confirm_hash = ? AND confirm_expires > ?')
+    .get(hashToken(token), Date.now());
+
+  if (!row) {
+    return res.status(400).json({ error: 'This link is invalid or has expired. Please subscribe again.' });
+  }
+
+  /* Timestamp and IP are the proof of consent we have to be able to produce. */
+  db.prepare(
+    "UPDATE newsletter_subscribers SET status = 'confirmed', confirm_hash = '', confirm_expires = 0, confirmed_at = ?, confirmed_ip = ? WHERE id = ?"
+  ).run(new Date().toISOString(), req.ip || '', row.id);
+
+  res.json({ ok: true, email: row.email });
+});
+
+/* Unsubscribing deletes the row — keeping it would need a reason we do not have. */
+app.post('/api/newsletter/unsubscribe', (req, res) => {
+  const token = String((req.body || {}).token || '');
+  if (!token) {
+    return res.status(400).json({ error: 'This link is incomplete.' });
+  }
+
+  const row = db.prepare('SELECT * FROM newsletter_subscribers WHERE unsubscribe_token = ?').get(token);
+  if (row) {
+    db.prepare('DELETE FROM newsletter_subscribers WHERE id = ?').run(row.id);
+  }
+
+  /* Answers ok either way: an already removed address must not look like a failure. */
+  res.json({ ok: true });
+});
 
 /* ---------- contact form ---------- */
 

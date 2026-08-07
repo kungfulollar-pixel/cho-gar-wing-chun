@@ -76,6 +76,27 @@ export async function sendMail({ to, subject, text, replyTo }) {
 
 /* ---------- templates ---------- */
 
+/*
+  Confirmation mail of the double opt-in. Deliberately free of any advertising:
+  German courts treat a confirmation mail that already promotes something as
+  unsolicited advertising itself.
+*/
+export function newsletterConfirmMail(token) {
+  return {
+    subject: 'Please confirm your newsletter subscription',
+    text:
+      `Hello,\n\n` +
+      `someone — hopefully you — entered this address for the Cho Gar Wing Chun newsletter.\n\n` +
+      `Confirm the subscription here:\n${siteUrl()}/newsletter-confirm.html?token=${token}\n\n` +
+      `The link is valid for seven days. If you did not request this, simply ignore ` +
+      `this message; without confirmation the address is never used and is deleted again.\n`
+  };
+}
+
+export function newsletterUnsubscribeUrl(token) {
+  return `${siteUrl()}/newsletter-unsubscribe.html?token=${token}`;
+}
+
 export function contactMail(enquiry) {
   return {
     subject: `Contact form: ${enquiry.name}`,

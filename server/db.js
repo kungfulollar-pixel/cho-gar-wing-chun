@@ -95,6 +95,29 @@ db.exec(`
   )
 `);
 
+/*
+  Newsletter subscribers, double opt-in.
+
+  German law requires the subscriber to confirm the address, and it requires the
+  operator to be able to prove that consent later — hence the timestamps and IP
+  addresses of both steps. Only the hash of the confirmation token is stored;
+  the unsubscribe token is kept in clear because every mailing has to carry it.
+*/
+db.exec(`
+  CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    email             TEXT    NOT NULL UNIQUE,
+    status            TEXT    NOT NULL DEFAULT 'pending',
+    confirm_hash      TEXT    NOT NULL DEFAULT '',
+    confirm_expires   INTEGER NOT NULL DEFAULT 0,
+    unsubscribe_token TEXT    NOT NULL,
+    requested_at      TEXT    NOT NULL,
+    requested_ip      TEXT    NOT NULL DEFAULT '',
+    confirmed_at      TEXT    NOT NULL DEFAULT '',
+    confirmed_ip      TEXT    NOT NULL DEFAULT ''
+  )
+`);
+
 db.exec('CREATE INDEX IF NOT EXISTS idx_members_status ON members(status)');
 db.exec('CREATE INDEX IF NOT EXISTS idx_sessions_member ON sessions(member_id)');
 db.exec('CREATE INDEX IF NOT EXISTS idx_resets_member ON password_resets(member_id)');
