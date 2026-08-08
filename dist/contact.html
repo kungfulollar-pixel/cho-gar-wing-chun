@@ -139,16 +139,27 @@
 
       submit.textContent = 'Send Message';
 
+      submit.disabled = false;
+
       if (!result.ok) {
         errorBox.textContent = result.error;
         errorBox.style.display = 'block';
-        submit.disabled = false;
         return;
       }
 
+      /*
+        The form stays where it is — hiding it after a send leaves anyone who
+        wants to ask a second question staring at an empty page. Only the fields
+        are cleared, and the confirmation sits above them.
+      */
       this.reset();
-      this.style.display = 'none';
       successBox.style.display = 'block';
+    });
+
+    /* A stale confirmation above a freshly typed message would be confusing. */
+    document.getElementById('contact-form').addEventListener('input', function () {
+      document.getElementById('contact-success').style.display = 'none';
+      document.getElementById('contact-error').style.display = 'none';
     });
   </script>
 </body>
