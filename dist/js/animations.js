@@ -189,11 +189,22 @@
     }
 
     // Freistehende Cards / Formulare
+    //
+    // Nur solche, die NICHT schon in einem .grid stecken: die animiert der
+    // Stagger oben bereits. Zwei from()-Tweens auf demselben Element lesen als
+    // Zielwert die vom ersten Tween gesetzte 0 — das Element blendet dann von 0
+    // nach 0 und bleibt dauerhaft unsichtbar (genau das ist dem Kontaktformular
+    // passiert). fromTo() setzt den Zielwert ausdruecklich und ist dagegen
+    // immun, falls doch einmal zwei Regeln greifen.
     Array.prototype.slice.call(document.querySelectorAll('.container > .card, .form-card')).forEach(function (el) {
-      gsap.from(el, {
-        opacity: 0, y: 30, duration: 0.7, ease: 'power2.out',
-        scrollTrigger: { trigger: el, start: 'top 85%' }
-      });
+      if (el.parentElement && el.parentElement.classList.contains('grid')) return;
+      gsap.fromTo(el,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1, y: 0, duration: 0.7, ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 85%' }
+        }
+      );
     });
 
     // Member-Header (Mitgliederbereich)
