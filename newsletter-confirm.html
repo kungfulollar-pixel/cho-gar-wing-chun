@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm Newsletter – Cho Gar Wing Chun</title>
+  <meta name="description" content="Confirm your subscription to the Cho Gar Wing Chun newsletter.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="css/fonts.css?v=9a52caf8">
+  <link rel="stylesheet" href="css/style.css?v=b85e9713">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo"><img src="images/logo-header.png" alt="Cho Gar Wing Chun" class="logo-mark"> Cho Gar Wing Chun</a>
+      <nav>
+        <button class="nav-toggle" aria-label="Open menu">☰</button>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="seminars.html">Seminars</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="login.html" class="btn-login">Member Login</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top:70px;">
+    <div class="container">
+      <span class="eyebrow" style="display:block;text-align:center;">Newsletter</span>
+      <h1 class="section-title">Confirm Your Subscription</h1>
+
+      <div class="form-card">
+        <div id="confirm-pending" class="form-note" style="text-align:center;">Checking your link …</div>
+        <div id="confirm-error" class="form-error"></div>
+        <div id="confirm-success" class="form-success">
+          <strong>Your subscription is confirmed.</strong><br>
+          You will receive seminar announcements and Cho Gar Wing Chun news. Every e-mail contains an unsubscribe link.
+        </div>
+        <p class="form-note"><a href="index.html" style="color:var(--color-gold-soft);">Back to the homepage</a></p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p class="footer-legal"><a href="imprint.html">Imprint</a> · <a href="privacy.html">Privacy Policy</a></p>
+        &copy; 2026 Cho Gar Wing Chun. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/vendor/gsap.min.js?v=2d26f4c0"></script>
+  <script src="js/vendor/ScrollTrigger.min.js?v=489bcf6d"></script>
+  <script src="js/animations.js?v=31047f8b"></script>
+  <script src="js/main.js?v=433aa5b0"></script>
+  <script src="js/cookie-banner.js?v=c22de433"></script>
+  <script>
+    (async function () {
+      var token = new URLSearchParams(window.location.search).get('token') || '';
+      var pending = document.getElementById('confirm-pending');
+      var errorBox = document.getElementById('confirm-error');
+      var successBox = document.getElementById('confirm-success');
+
+      function fail(message) {
+        pending.style.display = 'none';
+        errorBox.textContent = message;
+        errorBox.style.display = 'block';
+      }
+
+      if (!token) {
+        fail('This link is incomplete. Please open the link from your e-mail again.');
+        return;
+      }
+
+      var response;
+      try {
+        response = await fetch('/api/newsletter/confirm', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token })
+        });
+      } catch (e) {
+        fail('No connection to the server. Please try again later.');
+        return;
+      }
+
+      if (response.ok) {
+        pending.style.display = 'none';
+        successBox.style.display = 'block';
+        return;
+      }
+
+      var data = {};
+      try {
+        data = await response.json();
+      } catch (e) {
+        /* Keep the fallback message. */
+      }
+      fail(data.error || 'Your subscription could not be confirmed.');
+    })();
+  </script>
+</body>
+</html>
