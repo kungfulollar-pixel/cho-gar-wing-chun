@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact – Cho Gar Wing Chun</title>
   <meta name="description" content="Get in touch with Cho Gar Wing Chun — questions about training, trial classes or seminars in Europe.">
-  <link rel="stylesheet" href="css/fonts.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/fonts.css?v=9a52caf8">
+  <link rel="stylesheet" href="css/style.css?v=b85e9713">
 </head>
 <body>
 
@@ -113,12 +113,12 @@
     </div>
   </footer>
 
-  <script src="js/vendor/gsap.min.js"></script>
-  <script src="js/vendor/ScrollTrigger.min.js"></script>
-  <script src="js/animations.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/cookie-banner.js"></script>
-  <script src="js/auth.js"></script>
+  <script src="js/vendor/gsap.min.js?v=2d26f4c0"></script>
+  <script src="js/vendor/ScrollTrigger.min.js?v=489bcf6d"></script>
+  <script src="js/animations.js?v=36f12033"></script>
+  <script src="js/main.js?v=56846434"></script>
+  <script src="js/cookie-banner.js?v=c22de433"></script>
+  <script src="js/auth.js?v=260a903a"></script>
   <script>
     document.getElementById('contact-form').addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -139,16 +139,27 @@
 
       submit.textContent = 'Send Message';
 
+      submit.disabled = false;
+
       if (!result.ok) {
         errorBox.textContent = result.error;
         errorBox.style.display = 'block';
-        submit.disabled = false;
         return;
       }
 
+      /*
+        The form stays where it is — hiding it after a send leaves anyone who
+        wants to ask a second question staring at an empty page. Only the fields
+        are cleared, and the confirmation sits above them.
+      */
       this.reset();
-      this.style.display = 'none';
       successBox.style.display = 'block';
+    });
+
+    /* A stale confirmation above a freshly typed message would be confusing. */
+    document.getElementById('contact-form').addEventListener('input', function () {
+      document.getElementById('contact-success').style.display = 'none';
+      document.getElementById('contact-error').style.display = 'none';
     });
   </script>
 </body>

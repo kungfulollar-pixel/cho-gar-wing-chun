@@ -162,9 +162,16 @@
       });
     }
 
-    // Grid-Gruppen (Cards & Spalten) im Stagger
+    // Grid-Gruppen (Cards & Spalten) im Stagger.
+    // Formularkarten bleiben aussen vor — die werden weiter unten sofort
+    // eingeblendet, und zwei Animationen auf demselben Element haben das
+    // Kontaktformular schon einmal dauerhaft unsichtbar gemacht.
     gsap.utils.toArray('.grid').forEach(function (grid) {
-      gsap.from(grid.children, {
+      var kinder = Array.prototype.slice.call(grid.children).filter(function (kind) {
+        return !kind.classList.contains('form-card');
+      });
+      if (!kinder.length) return;
+      gsap.from(kinder, {
         opacity: 0, y: 32, duration: 0.6, ease: 'power2.out', stagger: 0.12,
         scrollTrigger: { trigger: grid, start: 'top 85%' }
       });
@@ -188,12 +195,24 @@
       });
     }
 
-    // Freistehende Cards / Formulare
-    Array.prototype.slice.call(document.querySelectorAll('.container > .card, .form-card')).forEach(function (el) {
-      gsap.from(el, {
-        opacity: 0, y: 30, duration: 0.7, ease: 'power2.out',
-        scrollTrigger: { trigger: el, start: 'top 85%' }
-      });
+    // Formularkarten werden bewusst NICHT animiert.
+    //
+    // Jede Einblendung setzt die Deckkraft zuerst auf 0. Laeuft die Animation
+    // dann nicht — zwei Tweens auf demselben Element, ein ScrollTrigger der
+    // nicht ausloest, eine Umgebung ohne Frames — bleibt das Formular
+    // unsichtbar. Genau das ist zweimal passiert. Ein Kontakt- oder
+    // Login-Formular ist Bedienelement, kein Deko-Element: Es ist einfach da.
+
+    // Freistehende Cards ausserhalb von Grids
+    Array.prototype.slice.call(document.querySelectorAll('.container > .card')).forEach(function (el) {
+      if (el.parentElement && el.parentElement.classList.contains('grid')) return;
+      gsap.fromTo(el,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1, y: 0, duration: 0.7, ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 85%' }
+        }
+      );
     });
 
     // Member-Header (Mitgliederbereich)

@@ -93,9 +93,25 @@ npm run build
 git add -A && git commit -m "…" && git push
 ```
 
-`npm run build` erzeugt `dist/`. Für den laufenden Betrieb ist der Ordner nicht
-nötig — der Node-Server liefert die Dateien aus dem Wurzelverzeichnis aus —, er
-bleibt aber im Repo, damit sich die Seite auch rein statisch ausliefern ließe.
+**`npm run build` ist Pflicht, wenn du CSS oder JavaScript anfasst** — nicht nur
+zum Erzeugen von `dist/`. Der Schritt schreibt in jede HTML-Datei eine
+Versionskennung aus dem Dateiinhalt, etwa `js/animations.js?v=36f12033`.
+
+Der Grund: Hostingers CDN liefert `css/` und `js/` mit `max-age=604800` aus —
+**eine Woche**. Ohne geänderte Adresse bekommen Besucher tagelang die alte
+Datei, obwohl das Deployment längst durch ist. Das hat einmal Stunden gekostet:
+Ein Fix an `animations.js` war live, im Browser lief weiter die Fassung von drei
+Tagen zuvor. Die HTML-Dateien selbst kommen mit `max-age=0`, sind also immer
+frisch — deshalb wirkt die Kennung sofort.
+
+Prüfen lässt sich das so:
+
+```bash
+curl -sI https://chogarkungfu.com/js/animations.js | grep -i "age\|last-modified"
+```
+
+Ein hohes `age` bedeutet: Es kommt eine zwischengespeicherte Fassung. Mit
+Versionskennung ist das unkritisch, weil jede Änderung eine neue Adresse ergibt.
 
 ## Checkliste, wenn etwas nicht geht
 
