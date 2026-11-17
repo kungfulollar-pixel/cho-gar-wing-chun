@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, 'dist');
-const folders = ['css', 'js', 'images'];
+const folders = ['css', 'js', 'images', 'videos'];
 
 /* Short content hash of a file, or null when it does not exist. */
 function versionOf(relativePath) {
