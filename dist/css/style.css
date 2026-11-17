@@ -555,6 +555,36 @@ body.lightbox-open {
   .lightbox-caption { margin-bottom: 52px; }
 }
 
+/* ---------- Contact person ---------- */
+
+.contact-person {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.contact-person img {
+  width: 120px;
+  height: 150px;
+  object-fit: cover;
+  object-position: center 20%;
+  border-radius: var(--radius);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+
+.contact-person h3 {
+  margin: 0 0 6px;
+  color: var(--color-gold-soft);
+}
+
+.contact-person p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
 /* ---------- Forms ---------- */
 
 .form-card {
