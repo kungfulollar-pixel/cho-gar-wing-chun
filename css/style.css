@@ -555,6 +555,89 @@ body.lightbox-open {
   .lightbox-caption { margin-bottom: 52px; }
 }
 
+/* ---------- Training journeys ---------- */
+
+.journey-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.journey-feature h2 {
+  margin-bottom: 18px;
+}
+
+.journey-feature p {
+  color: var(--color-text-muted);
+}
+
+.journey-portrait {
+  margin: 0;
+}
+
+.journey-portrait video,
+.journey-card video,
+.journey-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #000;
+}
+
+.journey-portrait video {
+  border-radius: var(--radius);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: var(--shadow);
+}
+
+.journey-portrait figcaption {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.journey-card {
+  background: var(--color-surface);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.journey-card video,
+.journey-card img {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.journey-card-body {
+  padding: 24px 26px 28px;
+  border-top: 3px solid var(--color-red);
+}
+
+.journey-card-body h3 {
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.journey-card-body p {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+@media (max-width: 800px) {
+  .journey-feature {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .journey-portrait {
+    max-width: 360px;
+    margin: 0 auto;
+  }
+}
+
 /* ---------- Contact person ---------- */
 
 .contact-person {
