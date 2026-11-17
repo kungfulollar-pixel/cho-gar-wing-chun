@@ -638,6 +638,21 @@ body.lightbox-open {
   }
 }
 
+/* ---------- Training journeys ---------- */
+
+.journey-intro { align-items: center; grid-template-columns: 5fr 7fr; }
+.journey-portrait { margin: 0 auto; max-width: 380px; }
+.journey-intro .eyebrow { text-align: left; }
+.journey-portrait video { width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); background: #000; display: block; }
+.journey-portrait figcaption { text-align: center; color: var(--color-text-muted); font-size: 0.85rem; margin-top: 10px; }
+.journey-card { background: var(--color-surface); border: 1px solid rgba(212, 175, 55, 0.12); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
+.journey-card img, .journey-card video { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #000; height: auto; }
+.journey-card-body { padding: 22px 24px 26px; border-top: 3px solid var(--color-red); }
+.journey-card-body h3 { margin: 0 0 10px; color: var(--color-gold-soft); }
+.journey-card-body p { margin: 0; color: var(--color-text-muted); line-height: 1.7; }
+.cta-section { background: var(--color-bg-alt); }
+@media (max-width: 860px) { .journey-intro { grid-template-columns: 1fr; } }
+
 /* ---------- Contact person ---------- */
 
 .contact-person {
